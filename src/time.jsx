@@ -37,8 +37,8 @@ export default class Time extends React.Component {
   componentDidMount () {
     // code to ensure selected time will always be in focus within time window when it first appears
     const multiplier = 60 / this.props.intervals
-    const currH = (this.props.selected) ? getHour(this.props.selected) : getHour(newDate())
-    this.list.scrollTop = 30 * (multiplier * currH)
+    const currH = (this.props.selected) ? getHour(this.props.selected) : getHour(newDate());
+    this.list.scrollTop = this.selected ? this.selected.offsetTop : 0;
   }
 
   handleClick = (time) => {
@@ -63,23 +63,29 @@ export default class Time extends React.Component {
   }
 
   renderTimes = () => {
-    let times = []
-    const format = (this.props.format) ? this.props.format : 'hh:mm A'
-    const intervals = this.props.intervals
-    const activeTime = (this.props.selected) ? this.props.selected : newDate()
-    const currH = getHour(activeTime)
-    const currM = getMinute(activeTime)
-    let base = getStartOfDay(newDate())
-    const multiplier = 1440 / intervals
-    for (let i = 0; i < multiplier; i++) {
-      times.push(addMinutes(cloneDate(base), i * intervals))
-    }
+      let times = []
+      const format = (this.props.format) ? this.props.format : 'hh:mm A'
+      const intervals = this.props.intervals
+      const activeTime = (this.props.selected) ? this.props.selected : newDate()
+      const currH = getHour(activeTime)
+      const currM = getMinute(activeTime)
+      let base = getStartOfDay(newDate())
+      const multiplier = 1440 / intervals
+      for (let i = 0; i < multiplier; i++) {
+          times.push(addMinutes(cloneDate(base), i * intervals))
+      }
 
-    return times.map((time, i) =>
-      <li key={i} onClick={this.handleClick.bind(this, time)} className={this.liClasses(time, currH, currM)}>
-        {formatDate(time, format)}
-      </li>
-    )
+      return times.map((time, i) => {
+          const classes = this.liClasses(time, currH, currM);
+          const selected = classes.indexOf('react-datepicker__time-list-item--selected') >= 0;
+          return (
+              <li key={i} onClick={this.handleClick.bind(this, time)} className={classes}
+                  ref={el => selected && (this.selected = el)}
+              >
+                  {formatDate(time, format)}
+              </li>
+          );
+      });
   }
 
   render () {
